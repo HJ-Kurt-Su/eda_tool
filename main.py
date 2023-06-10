@@ -4,7 +4,7 @@ import itertools
 
 import datetime
 import numpy as np
-# import io
+import io
 import plotly.express as px
 # from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -16,11 +16,20 @@ def convert_df(df):
 
 st.title('EDA (Exploratory Data Analysis) Tool')
 
+st.markdown("#### Author & License:")
+
+st.markdown("**Kurt Su** (phononobserver@gmail.com)")
+
+st.markdown("**This tool release under [CC BY-NC-SA](https://creativecommons.org/licenses/by-nc-sa/4.0/) license**")
+
+st.markdown("               ")
+st.markdown("               ")
+
 
 # Provide dataframe example & relative url
 data_ex_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTnqEkuIqYHm1eDDF-wHHyQ-Jm_cvmJuyBT4otEFt0ZE0A6FEQyg1tqpWTU0PXIFA_jYRX8O-G6SzU8/pub?gid=0&single=true&output=csv"
 # st.write("Factor Format Example File [link](%s)" % factor_ex_url)
-st.markdown("#### Data Format Example File [Demo File](%s)" % data_ex_url)
+st.markdown("### **Data Format Example File [Demo File](%s)**" % data_ex_url)
 
 uploaded_csv = st.file_uploader('#### 選擇您要上傳的CSV檔')
 
@@ -84,13 +93,17 @@ elif fig_type == "interaction(DOE)":
 
 
 
-if st.button('Plot'):
+if st.checkbox('Plot'):
     df_plot = df_raw.copy()
+
+    color_sequence = ["#65BFA1", "#A4D6C1", "#D5EBE1", "#EBF5EC", "#00A0DF", "#81CDE4", "#BFD9E2"]
+    color_sequence = px.colors.qualitative.Pastel
+    template = "simple_white"
 
 
     if fig_type == "box":
         fig = px.box(df_plot, x = x_var, y=y_var, color=category, points="all", 
-                        # color_discrete_sequence=color_sequence, template=template, 
+                        color_discrete_sequence=color_sequence, template=template, 
                         # range_y=y_range, 
                         width=fig_width, height=fig_height,
                         hover_data=df_plot.columns,
@@ -98,21 +111,22 @@ if st.button('Plot'):
 
     elif fig_type == "violin":
         fig = px.violin(df_plot, x=x_var, y=y_var, color=category, points="all",
-                        # box=False, color_discrete_sequence=color_sequence, 
-                        # template=template, range_y=y_range, 
+                        box=False, color_discrete_sequence=color_sequence, 
+                        template=template, #range_y=y_range, 
                         width=fig_width, height=fig_height,
                         hover_data=df_plot.columns,
                         )
         
     elif fig_type == "histogram":
         fig = px.histogram(df_plot, x=y_var, nbins=bins, color=category,
-                    # color_discrete_sequence=color_sequence,
-                    # range_x=x_range, range_y=y_range, template=template,       
+                    color_discrete_sequence=color_sequence, template=template,
+                    # range_x=x_range, range_y=y_range,        
                     width=fig_width, height=fig_height
                     )
     
     elif fig_type == "pair plot":
         fig = px.scatter_matrix(df_plot, dimensions=focus_factor, color=category, 
+                                color_discrete_sequence=color_sequence, template="plotly_white",
                              width=fig_width, height=fig_height)
         fig.update_traces(diagonal_visible=False, showupperhalf=False)
 
@@ -139,7 +153,9 @@ if st.button('Plot'):
             df_interact_group = df_interact_plot.groupby(list(inter_factor), as_index=False).mean()
 
 
-            fig_scatter = px.scatter(df_interact_plot, x=factor_1, y=y_var, color=factor_2, width=fig_width, height=fig_height)
+            fig_scatter = px.scatter(df_interact_plot, x=factor_1, y=y_var, color=factor_2, 
+                                     width=fig_width, height=fig_height,
+                                     )
             fig_line = px.line(df_interact_group, x=factor_1, y=y_var, color=factor_2, width=fig_width, height=fig_height, markers=True)
             fig = go.Figure(data=fig_scatter.data + fig_line.data)
             fig.update_layout(
@@ -150,7 +166,9 @@ if st.button('Plot'):
                 yaxis_title=y_var,
                 title=factor_2,
                 legend_title=factor_2,
-                legend_orientation="h"
+                legend_orientation="h",
+                # color_discrete_sequence=color_sequence, template=template
+
                 # margin=dict(
                 #     l=50,
                 #     r=50,
@@ -182,3 +200,16 @@ if st.button('Plot'):
     if fig_type != "interaction(DOE)":
 
         st.plotly_chart(fig, use_container_width=True)
+
+    date = str(datetime.datetime.now()).split(" ")[0]
+    mybuff = io.StringIO()
+    fig_file_name = date + "_" + fig_type + ".html"
+    # fig_html = fig_pair.write_html(fig_file_name)
+    fig.write_html(mybuff, include_plotlyjs='cdn')
+    html_bytes = mybuff.getvalue().encode()
+
+    st.download_button(label="Download figure",
+                        data=html_bytes,
+                        file_name=fig_file_name,
+                        mime='text/html'
+                        )
