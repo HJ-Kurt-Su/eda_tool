@@ -14,7 +14,7 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(index=False).encode('utf-8')
 
-st.title('Modulus (Slope) Tool')
+st.title('EDA (Exploratory Data Analysis) Tool')
 
 
 # Provide dataframe example & relative url
