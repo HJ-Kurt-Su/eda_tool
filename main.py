@@ -91,6 +91,13 @@ elif fig_type == "interaction(DOE)":
         "### Choose focus factor", x_list,
     )
 
+elif fig_type in ["bubble", "bubble animate"]:
+    size_var = st.selectbox(
+            "### Choose bubble size", x_list)
+    
+    if fig_type == "bubble animate":
+        animate = st.selectbox(
+            "### Choose animate", x_list)
 
 
 if st.checkbox('Plot'):
@@ -130,6 +137,22 @@ if st.checkbox('Plot'):
                              width=fig_width, height=fig_height)
         fig.update_traces(diagonal_visible=False, showupperhalf=False)
 
+
+    elif fig_type in ["scatter", "bubble", "bubble animate"]:
+        if fig_type == "scatter":
+            size_var = None
+            animate = None
+        
+        if fig_type == "bubble":
+            animate = None
+            
+        fig = px.scatter(df_plot, x=x_var, y=y_var, size=size_var, size_max=45,
+                animation_frame=animate, #animation_group=animate_g, 
+                color=category, color_discrete_sequence=color_sequence, template=template, 
+                # range_x=x_range, range_y=y_range, 
+                # log_x=xlog_scale, log_y=ylog_scale,
+                width=fig_width, height=fig_height
+                )
 
     elif fig_type == "interaction(DOE)":
         iter_list =  list(itertools.combinations(focus_factor, 2))
